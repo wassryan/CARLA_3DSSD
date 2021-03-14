@@ -49,7 +49,7 @@ class KittiDataset(Dataset):
         self.train_list = os.path.join(self.sv_npy_path, 'train_list.txt')
 
         self.test_mode = cfg.TEST.TEST_MODE
-        if self.test_mode == 'mAP':
+        if self.test_mode == 'mAP': # T
             self.evaluation = self.evaluate_map 
             self.logger_and_select_best = self.logger_and_select_best_map 
         elif self.test_mode == 'Recall':
@@ -177,7 +177,11 @@ class KittiDataset(Dataset):
             sample_id = int(self.idx_list[sample_idx])
             
             img = self.kitti_object.get_image(sample_id)
-            img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
+            try:
+                img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
+            except:
+                print("[Error] something wrong this image, please debug it...")
+                from ipdb import set_trace; set_trace()
             image_shape = img.shape
  
             calib = self.kitti_object.get_calibration(sample_id)
@@ -374,7 +378,7 @@ class KittiDataset(Dataset):
         obj_detection_list = np.concatenate(obj_detection_list, axis=0)
         obj_detection_name = np.array(obj_detection_name, dtype=np.string_)
         obj_detection_num = np.array(obj_detection_num, dtype=np.int)          
-        
+        # using utils.tf_ops.evaluation.tf_evaluate.py evaluate function
         precision_img, aos_img, precision_ground, aos_ground, precision_3d, aos_3d = evaluate(obj_detection_list, obj_detection_name, obj_detection_num)
         precision_img_op, aos_img_op, precision_ground_op, aos_ground_op, precision_3d_op, aos_3d_op = sess.run([precision_img, aos_img, precision_ground, aos_ground, precision_3d, aos_3d])
 

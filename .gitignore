@@ -18,3 +18,4 @@ weights
 **/dist
 configs
 scripts
+*.whl

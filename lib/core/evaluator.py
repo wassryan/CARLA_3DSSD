@@ -51,6 +51,7 @@ class evaluator:
 
         # dataset
         dataset_func = choose_dataset()
+        # KittiDataset
         self.dataset = dataset_func('loading', split=args.split, img_list=args.img_list, is_training=self.is_training, workers_num=self.num_workers)
         self.dataset_iter = self.dataset.load_batch(self.batch_size * self.gpu_num)
         self._log_string('**** Dataset length is %d ****'%len(self.dataset))
@@ -113,6 +114,7 @@ class evaluator:
                     self._log_string('Assign From checkpoint: %s'%self.last_eval_model_path)
 
                     self.saver.restore(sess, self.last_eval_model_path)
+                    # KittiDataset.evaluate_map()
                     result_list = self.dataset.evaluation(sess, self.feeddict_producer, self.pred_list, self.val_size, self.cls_thresh, self.log_dir, self.placeholders) 
                     cur_result = self.dataset.logger_and_select_best(result_list, self._log_string)
 

@@ -1,5 +1,5 @@
 # evaluation 
-TFPATH=$1 # e.g: /usr/local/lib/python3.5/dist-packages/tensorflow
+TFPATH=$1 # e.g: ~/anaconda3/envs/3dssd-tf/lib/python3.6/site-packages/tensorflow
 CUDAPATH=$2 # e.g: /usr/local/cuda-9.0
 OPSPATH="lib/utils/tf_ops"
 

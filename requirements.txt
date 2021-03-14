@@ -15,4 +15,3 @@ msgpack
 msgpack-numpy
 setproctitle
 # mayavi
-
