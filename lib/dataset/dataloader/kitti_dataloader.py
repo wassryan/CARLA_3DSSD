@@ -33,7 +33,7 @@ class KittiDataset(Dataset):
         self.label_dir = os.path.join(cfg.DATASET.KITTI.BASE_DIR_PATH, split, 'label_2')
         self.kitti_object = kitti_object.kitti_object(self.dataset_dir, split)
         self.is_training = is_training
-        self.img_list = img_list
+        self.img_list = img_list # if tester.py, 'va'
         self.workers_num = workers_num
 
         self.cls_list = cfg.DATASET.KITTI.CLS_LIST
@@ -44,9 +44,10 @@ class KittiDataset(Dataset):
         base_dir = ''
         if not cfg.TEST.WITH_GT:
             base_dir += 'no_gt/'
+        # ./data/CARLA/val/('Car',)
         self.sv_npy_path = os.path.join(cfg.ROOT_DIR, cfg.DATASET.KITTI.SAVE_NUMPY_PATH, base_dir + self.img_list, '{}'.format(self.cls_list))
 
-        self.train_list = os.path.join(self.sv_npy_path, 'train_list.txt')
+        self.train_list = os.path.join(self.sv_npy_path, 'train_list.txt') # data/CARLA/val/('Car',)/train_list.txt
 
         self.test_mode = cfg.TEST.TEST_MODE
         if self.test_mode == 'mAP': # T
@@ -57,8 +58,8 @@ class KittiDataset(Dataset):
             self.logger_and_select_best = self.logger_and_select_best_recall
         else: raise Exception('No other evaluation mode.')
 
-        if mode == 'loading':
-            # data loader
+        if mode == 'loading': # if tester.py, True
+            # data loader (read)
             with open(self.train_list, 'r') as f:
                 self.train_npy_list = [line.strip('\n') for line in f.readlines()]
             self.train_npy_list = np.array(self.train_npy_list)
@@ -66,7 +67,7 @@ class KittiDataset(Dataset):
             if self.is_training:
                 self.data_augmentor = DataAugmentor('KITTI', workers_num=self.workers_num)
 
-        elif mode == 'preprocessing':
+        elif mode == 'preprocessing': # if data_preprocessor.py, True
             # preprocess raw data
             if img_list == 'train':
                 list_path = os.path.join(cfg.ROOT_DIR, cfg.DATASET.KITTI.TRAIN_LIST)
@@ -90,6 +91,7 @@ class KittiDataset(Dataset):
                 self.mixup_db_trainlist_path = dict()
                 self.mixup_db_class = cfg.TRAIN.AUGMENTATIONS.MIXUP.CLASS
                 for cls in self.mixup_db_class:
+                    # ./data/CARLA/mixup_database/CARLA/train/Car
                     mixup_db_cls_path = os.path.join(cfg.ROOT_DIR, cfg.DATASET.KITTI.SAVE_NUMPY_PATH, cfg.TRAIN.AUGMENTATIONS.MIXUP.SAVE_NUMPY_PATH, cfg.TRAIN.AUGMENTATIONS.MIXUP.PC_LIST, '{}'.format(cls))
                     mixup_db_trainlist_path = os.path.join(mixup_db_cls_path, 'train_list.txt')
                     if not os.path.exists(mixup_db_cls_path): os.makedirs(mixup_db_cls_path)
@@ -290,7 +292,7 @@ class KittiDataset(Dataset):
             sample_dicts.append(sample_dict)
         return sample_dicts
                 
-
+    # data_preprocessor.py call this func
     def preprocess_batch(self):
         # if create_gt_dataset, then also create a boxes_numpy, saving all points
         if cfg.TRAIN.AUGMENTATIONS.MIXUP.OPEN: # also save mixup database
@@ -459,15 +461,18 @@ class KittiDataset(Dataset):
         return cur_result
 
   
-    # Save predictions
+    # Save predictions, forward once per time in tester.py
     def save_predictions(self, sess, feeddict_producer, pred_list, val_size, cls_thresh, log_dir, placeholders=None):
+        """
+        pred_list: prediction placeholder for model
+        """
         obj_detection_list = []
         obj_detection_num = []
         obj_detection_name = []
         sv_dir = os.path.join(log_dir, 'kitti_result')
         if not os.path.exists(sv_dir): os.makedirs(sv_dir)
         for i in tqdm.tqdm(range(val_size)):
-            feed_dict = feeddict_producer.create_feed_dict()
+            feed_dict = feeddict_producer.create_feed_dict() # data collected from dataloader
 
             pred_bbox_3d_op, pred_cls_score_op, pred_cls_category_op = sess.run(pred_list, feed_dict=feed_dict) 
 

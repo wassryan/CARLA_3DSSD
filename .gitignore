@@ -16,6 +16,6 @@ weights
 *.bak
 **/*.egg-info
 **/dist
-configs
+#configs
 scripts
 *.whl
